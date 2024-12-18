@@ -190,7 +190,7 @@ function glpi{
 
         Write-Output "O arquivo foi baixado com sucesso." -ForegroundColor Green
 
-        $glpiServer = "https://portal.staterati.com.br/"
+        $glpiServer = "https://GLPI.exemplo.com.br/"
 
 
         Write-Host "Instalando GLPI...."
