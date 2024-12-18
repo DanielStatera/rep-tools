@@ -1,50 +1,80 @@
-# Linha 9 cria uma variavel para criação de uma pasta (C:/JLLACRONIS) Pode utilizar o nome que você quiser.
-# Linha 10 cria você deve inserir um token valido para o cliente (gerado no portal do Acronis)
-# Linha 24 testa se já existe um acronis instalado e caso negativo Iniciar a instalação 
-# Linha 32 baixa o arquivo agente instalador do windows diretamente do site da Acronis e manda salvar no diretorio que vc criou na linha 8
-# Linha 44 Executa o arquivo que está baixado no seu diretorio (criado com a variavel da linha 8 e executa como adm) 
-# Linha 50 Exclui a pasta criada na linha 9
+    Write-Host "<===== Instalacao Acronis =====>"
 
+    $workdir = "c:\deployTools"
+    $CloudUrl = "https://br01-cloud.acronis.com/"
+    $RegistrationToken = " Digite aqui o token do acronis após apagar esta linha "
+        
+    Write-Host "Verificando Instalacao...."
 
-   # Cria a variavel (PASTA JLL ACRONIS)
-$workdir = "c:\deployacronis"
-$CloudUrl = "https://br01-cloud.acronis.com/"
-$RegistrationToken = "xxxx-xxxx-xxxx"
+    $sixtyFourBit = Test-Path -Path "C:\Program Files\Common Files\Acronis"
+    $AcronisInstalled = Test-Path -Path "C:\Program Files (x86)\Common Files\Acronis"
 
-$sixtyFourBit = Test-Path -Path "C:\Program Files"
-
-$AcronisInstalled = Test-Path -Path "C:\Program Files (x86)\Common Files\Acronis"
-
-If ($AcronisInstalled){ 
-    Write-Host "Acronis já está instalado"
     
-} ELSE { 
-    Write-Host "Begining the installation"
-
-  # Testa se o diretorio existe ou não. 
-
-    If (Test-Path -Path $workdir -PathType Container){ 
-        Write-Host "$workdir already exists" -ForegroundColor Red
+    If ($AcronisInstalled -or $sixtyFourBit){ 
+        Write-Host "Acronis ja esta instalado....."
+            
     } ELSE { 
-        New-Item -Path $workdir  -ItemType directory 
+        Write-Host "Testando Diretorios...."
+        
+        # Testa se o diretorio existe ou não. 
+        
+        If (Test-Path -Path $workdir -PathType Container){ 
+            Write-Host "$workdir already exists" -ForegroundColor Red
+        } ELSE { 
+            New-Item -Path $workdir  -ItemType directory 
+        }
+        
+        # Baixa o arquivo direto do repositorio da Acronis
+            
+        Write-Host "Baixando Componentes para Instalacao...."
+
+        $source = "https://github.com/DanielStatera/rep-tools/releases/download/tools/Acronis.exe"
+        $destination = "$workdir\Acronis.exe"
+
+        try {
+            if (Get-Command 'Invoke-WebRequest') {
+                Invoke-WebRequest $source -OutFile $destination
+            } else {
+                $WebClient = New-Object System.Net.WebClient
+                $webclient.DownloadFile($source, $destination)
+            }
+            
+            # Verifica se o arquivo foi baixado corretamente
+            if (Test-Path -Path $destination) {
+                Write-Host "O arquivo foi baixado com sucesso e esta localizado em $destination." -ForegroundColor Green
+                    
+                # Opcional: Verificação adicional do tamanho do arquivo
+                $fileInfo = Get-Item -Path $destination
+                if ($fileInfo.Length -gt 0) {
+                    Write-Host "O arquivo foi baixado corretamente e não esta vazio." -ForegroundColor Green
+                } else {
+                    Write-Host "O arquivo foi baixado, mas parece estar vazio." -ForegroundColor Red
+                }
+            } else {
+                Write-Host "Falha ao baixar o arquivo." -ForegroundColor Red
+            }
+        } catch {
+            Write-Host "Ocorreu um erro durante o download do arquivo: $_" -ForegroundColor Red
+        }
+
+        Write-Host "Iniciando a instalação....."
+        # Inicia a instalação e utiliza o argumento de instalação sem interação do usuário.
+        $process = Start-Process -FilePath "$workdir\Acronis.exe" -ArgumentList "--add-components=commandLine,agentForWindows --reg-address=$CloudUrl --registration=by-token --reg-token=$RegistrationToken --quiet" -Wait -PassThru
+
+
+        Write-Host "Verificando instalação....."
+        # Verifica se o processo foi concluído com sucesso
+        if ($process.ExitCode -eq 0) {
+            $acronisPath = "C:\Program Files (x86)\Common Files\Acronis"
+
+            if (Test-Path -Path $acronisPath) {
+                Write-Host "Acronis foi instalado com sucesso."
+            } else {
+                Write-Host "Falha na instalacao do Acronis." -ForegroundColor Red
+            }
+        } else {
+            Write-Host "Erro durante a instalacao do Acronis. Codigo de saida: $($process.ExitCode)" -ForegroundColor Red
+        }
+        
+        
     }
-
-    # Baixa o arquivo direto do repositorio da Acronis
-
-    $source = "https://deployacronis.blob.core.windows.net/deployacronis/AcronisCyberProtect_AgentForWindows_Web.exe"
-    $destination = "$workdir\AcronisCyberProtect_AgentForWindows_Web.exe"
-
-      if (Get-Command 'Invoke-Webrequest'){
-        Invoke-WebRequest $source -OutFile $destination
-    } else {
-        $WebClient = New-Object System.Net.WebClient
-        $webclient.DownloadFile($source, $destination)
-    }
-
-  # Inicia a instalação e utiliza o argumento de instalação sem interação do usuário.
-    
-    Start-Process -FilePath "$workdir\AcronisCyberProtect_AgentForWindows_Web.exe" -ArgumentList "--add-components=commandLine,agentForWindows --reg-address=$CloudUrl --registration=by-token --reg-token=$RegistrationToken --quiet"
-
-    Start-Sleep -s 35
-
-  }

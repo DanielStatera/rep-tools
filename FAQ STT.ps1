@@ -1,8 +1,10 @@
+$txtDir = "c:\deployTools"
+
 # Defina o link do arquivo a ser baixado
 $url = "https://github.com/DanielStatera/Faq-desktop/releases/download/Production/FaqInstall.exe"
 
 # Defina o caminho e nome do arquivo a ser salvo
-$filePath = "C:\FaqInstall.exe"
+$filePath = "$txtDir\FaqInstall.exe"
 
 # Baixe o arquivo com retry
 $retryCount = 3
