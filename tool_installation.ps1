@@ -286,7 +286,7 @@ function tactical_install{
     
     #Tem que colocar o url correta
     $api = '"https://api.exemplo.com.br"'
-    
+
     $clientid = $paramClientid
     $siteid = $paramSiteid
     $agenttype = '"workstation"'
@@ -716,12 +716,11 @@ function cleaning{
 
     Write-Host "Removendo Arquivos...."
 
-    Remove-Item -Path $workdir -Recurse -Force
+    Remove-Item -Path $txtDir -Recurse -Force
 
     Write-Host "A pasta e todos os arquivos foram apagados com sucesso."
 
 }
-
 
 # Loop principal do menu
 while ($true) {
@@ -730,7 +729,6 @@ while ($true) {
     
     # Captura a escolha do usuário
     $option = Read-Host "Digite sua opcao: "
-
 
     # Verifica qual opção o usuário escolheu
     switch ($option) {
